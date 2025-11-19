@@ -1,0 +1,15 @@
+#imports
+from skimage import transform
+from skimage import filters
+import cv2
+
+#guide for using the built in cv2 seam carving (but we can use the setup!): 
+# https://www.geeksforgeeks.org/python/image-resizing-using-seam-carving-using-opencv-in-python/
+
+#importing image
+img = cv2.imread('images/penguins.jpeg')
+
+#greyscale image/edge detection
+imgG = cv2.cvtColor(img, cv2.COLOR_BGR2GREY)
+#sobel = edge detection (we can include canny edge) 
+filtered = filters.sobel(gray.astype("float"))

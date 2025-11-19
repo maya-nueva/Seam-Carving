@@ -1,0 +1,10 @@
+this is our colaboratory 
+
+psuedocode! for seam carving
+the general idea...
+- take image
+- grey(liu)scale image
+- edge detect image the black/white img
+- split image at arbitrary seam 
+- find average pixel to fill in seam
+- 

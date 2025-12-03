@@ -1,60 +1,60 @@
-from skimage import io
-from skimage import filters
 import numpy as np
 import matplotlib.pyplot as plt
 import cv2
 
-
-def load(image_path):
-    """Loads an image from a file path, returning a numpy array of shape(image_height, image_width, 3).
-    """
-    out = io.imread(image_path)
-
-    # Convert the image to be in the range (0, 1)
-    out = out.astype(np.float64) / 255
-    return out
-
 image1_path = "./images/field.jpg"
 img1 = cv2.imread(image1_path)
-
+img1 = cv2.cvtColor(img1, cv2.COLOR_BGR2RGB)
 
 def display(img):
     # Show image
     plt.figure(figsize = (5,5))
-    plt.imshow(img)
+    plt.imshow(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
     plt.axis('off')
     plt.show()
 
-# display(img1)
-
-from skimage import color
-# from skimage.color import label2rgb
 
 def convert_to_grayscale(img):
     '''img is an RGB image, represented as a 2D numpy array.'''
     # YOUR CODE GOES HERE
     # out = img
-    out = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
+    out = cv2.cvtColor(img,cv2.COLOR_RGB2GRAY)
+    # out = cv2.imread(img)#, cv2.IMREAD_GRAYSCALE)
     return out
 
 imgG = convert_to_grayscale(img1)
-plt.imshow(imgG,cmap='gray')
-# display(grey_image)
-# imgG = cv2.cvtColor(img, COLOR_BGR2GRAY)
-#sobel = edge detection (we can include canny edge) 
-# filtered = filters.sobel(RGB2GRAY.astype("float"))
-filtered = cv2.Canny(imgG,20,40)
-filtered1 = cv2.Canny(img1,200,200)
-filtered2 = cv2.Canny(imgG,60,20)
-filtered3 = filters.sobel(filtered)
-# cv2.imshow("penguin", imgG)
-display(imgG)
-plt.imshow(filtered,cmap='gray')
-display(filtered)
-plt.imshow(filtered1,cmap='gray')
-display(filtered1)
-plt.imshow(filtered2,cmap='gray')
-display(filtered2)
+# imgG = cv2.cvtColor(imgG, cv2.COLOR_BGR2RGB)
 
-plt.imshow(filtered3,cmap='gray')
-display(filtered3)
+filtered1 = cv2.Canny(img1,200,200)
+
+
+# Source: https://stackoverflow.com/questions/58149004/understanding-the-sobel-operation-output-for-creating-an-energy-map 
+# Posted by Amanda, modified by community. See post 'Timeline' for change history
+# Retrieved 2025-12-03, License - CC BY-SA 4.0
+#Mat grad_x, grad_y;
+sobelX = cv2.Sobel(imgG, cv2.CV_32F, 1, 0, ksize=5)
+sobelY = cv2.Sobel(imgG, cv2.CV_32F, 0, 1, ksize=5)
+imgG8U = cv2.Mat.convertTo() #convert 32u back to 8u
+
+def energy_map(imgG):
+    # run a sobel filter
+    pass
+
+display(imgG)
+display(filtered1)
+display(sobelXY) #find or create
+
+def get_energy(img):
+    #run convolution on edge detected image I think
+    pass
+
+#get the best seam
+def min_seam(img):
+    imgW, imgH = img.shape #get the image proportions
+    imageEnergy = get_energy(img) 
+    energyMap = imageEnergy.copy() 
+    seamAssignments = np.zeros(energyMap) #create an array with zeros (the same dimensions)
+    
+
+    
+    

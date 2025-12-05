@@ -51,12 +51,22 @@ def get_energy(img):
     #run convolution on edge detected image I think
     pass
 
-#get the best seam
+#get the best seam its top down sorry
 def min_seam(img):
-    imgW, imgH = img.shape #get the image proportions
-    imageEnergy = get_energy(img) 
-    energyMap = imageEnergy.copy() 
-    seamAssignments = np.zeros(energyMap) #create an array with zeros (the same dimensions)
+   imgW, imgH = img.shape #get the image proportions
+   imageEnergy = get_energy(img)
+   energyMap = imageEnergy.copy()
+   seamAssignments = np.zeros_like(energyMap) #create an array with zeros (the same dimensions)
+   for h in range(imgH - 1):
+      for w in range(imgW):
+         choices = []
+         if w > 0: #not on the left edge
+            choices.append(energyMap[h + 1, w -1])
+         elif w < (imgW -1): # not on the right edge
+            choices.append(energyMap[h + 1, w + 1])
+
+         choices.append(energyMap[h + 1, w]) #append the pixel directly below it no matter what!
+         chosenPixel_e,  = min(choices) #the best next pixels 
     
 
     

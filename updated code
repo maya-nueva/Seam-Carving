@@ -2,77 +2,67 @@ import numpy as np
 import matplotlib.pyplot as plt
 import cv2
 
-image1_path = "./images/field.jpg" 
-# be aware that this path may not be the same across all computer setups!!!!
-
+image1_path = "./images/field.jpg" # be aware that this path may not be the same across all computer setups!!!!
 img1 = cv2.imread(image1_path)
-img1 = cv2.cvtColor(img1, cv2.COLOR_BGR2RGB)
-
-if img1 is None:
-    print("error loading image. check path")
+img1 = cv2.cvtColor(img1, cv2.COLOR_BGR2RGB) # we convert our image into color RGB in order to work with it as a grayscale image later
 
 def display(img):
     # Show image
     plt.figure(figsize = (5,5))
-    plt.imshow(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+    plt.imshow(cv2.cvtColor(img, cv2.COLOR_BGR2RGB)) # this ensures that we don't have to rerun the color conversion for every new display line
     plt.axis('off')
     plt.show()
 
 
 def convert_to_grayscale(img):
     '''img is an RGB image, represented as a 2D numpy array.'''
-    # out = img
     out = cv2.cvtColor(img,cv2.COLOR_RGB2GRAY)
-    # out = cv2.imread(img)#, cv2.IMREAD_GRAYSCALE)
     return out
 
 imgG = convert_to_grayscale(img1)
-# imgG = cv2.cvtColor(imgG, cv2.COLOR_BGR2RGB)
-
-filtered1 = cv2.Canny(img1,200,200)
 
 
-# Source: https://stackoverflow.com/questions/58149004/understanding-the-sobel-operation-output-for-creating-an-energy-map 
-# Posted by Amanda, modified by community. See post 'Timeline' for change history
-# Retrieved 2025-12-03, License - CC BY-SA 4.0
-#Mat grad_x, grad_y;
-
-def energy_map(img):
+def get_energy_map(img):
     sobelX = cv2.Sobel(img, cv2.CV_32F, 1, 0, ksize=3)
     sobelY = cv2.Sobel(img, cv2.CV_32F, 0, 1, ksize=3)
     energyLevel = cv2.magnitude(sobelX, sobelY) 
     # bright edges that appear in the map are stronger, higher energies 
     # that signify whether an object is of importance (& whether to keep them)
     # this will also show the lower energy levels that we want to eliminate
-    return energyLevel.astype(np.uint8)
+    image = energyLevel.astype(np.uint8)
+    # Helpful Source: https://stackoverflow.com/questions/58149004/understanding-the-sobel-operation-output-for-creating-an-energy-map 
+    return image
 
-display(imgG)
-display(filtered1)
-e_m = energy_map(imgG)
-display(e_m)
+display(imgG) 
+e_m = get_energy_map(imgG) 
+display(e_m) 
 
 
-def get_energy(img):
-    #run convolution on edge detected image I think
-    pass
-
-#get the best seam its top down sorry
+#get the best seam its top down
 def min_seam(img):
-   imgW, imgH = img.shape #get the image proportions
-   imageEnergy = get_energy(img)
+   imgH, imgW = img.shape #get the image proportions
+   imageEnergy = get_energy_map(img)
    energyMap = imageEnergy.copy()
    seamAssignments = np.zeros_like(energyMap) #create an array with zeros (the same dimensions)
-   for h in range(imgH - 1):
-      for w in range(imgW):
-         choices = []
-         if w > 0: #not on the left edge
+   minArray = np.zeros_like(energyMap) #create an array with zeros (the same dimensions)
+   seams = []
+   for h in range(imgH - 2):
+      for w in range(imgW-1):
+        choices = []
+        if w > 0: #not on the left edge
             choices.append([energyMap[h + 1, w -1], w-1])
-         if w < (imgW -1): # not on the right edge
+        if w < (imgW -1): # not on the right edge
             choices.append([energyMap[h + 1, w + 1], w + 1])
+        
+        choices.append([energyMap[h + 1, w], w]) #append the pixel directly below it no matter what!
+        chosenPixel_e, chosenPixel_x = np.argmin(choices, axis=0) #the best next pixels
+        
+        minArray[h][w] = 
 
-         choices.append([energyMap[h + 1, w], w]) #append the pixel directly below it no matter what!
-         chosenPixel_e, chosenPixel_x = min(choices, axis=0) #the best next pixels
-    
 
-    
-    
+min_seam(e_m)
+
+def remove_seams():
+   
+
+   pass

@@ -2,9 +2,14 @@ import numpy as np
 import matplotlib.pyplot as plt
 import cv2
 
-image1_path = "./images/field.jpg"
+image1_path = "./images/field.jpg" 
+# be aware that this path may not be the same across all computer setups!!!!
+
 img1 = cv2.imread(image1_path)
 img1 = cv2.cvtColor(img1, cv2.COLOR_BGR2RGB)
+
+if img1 is None:
+    print("error loading image. check path")
 
 def display(img):
     # Show image

@@ -61,12 +61,12 @@ def min_seam(img):
       for w in range(imgW):
          choices = []
          if w > 0: #not on the left edge
-            choices.append(energyMap[h + 1, w -1])
-         elif w < (imgW -1): # not on the right edge
-            choices.append(energyMap[h + 1, w + 1])
+            choices.append([energyMap[h + 1, w -1], w-1])
+         if w < (imgW -1): # not on the right edge
+            choices.append([energyMap[h + 1, w + 1], w + 1])
 
-         choices.append(energyMap[h + 1, w]) #append the pixel directly below it no matter what!
-         chosenPixel_e,  = min(choices) #the best next pixels 
+         choices.append([energyMap[h + 1, w], w]) #append the pixel directly below it no matter what!
+         chosenPixel_e, chosenPixel_x = min(choices, axis=0) #the best next pixels
     
 
     

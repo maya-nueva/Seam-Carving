@@ -16,7 +16,6 @@ def display(img):
 
 def convert_to_grayscale(img):
     '''img is an RGB image, represented as a 2D numpy array.'''
-    # YOUR CODE GOES HERE
     # out = img
     out = cv2.cvtColor(img,cv2.COLOR_RGB2GRAY)
     # out = cv2.imread(img)#, cv2.IMREAD_GRAYSCALE)
@@ -32,17 +31,21 @@ filtered1 = cv2.Canny(img1,200,200)
 # Posted by Amanda, modified by community. See post 'Timeline' for change history
 # Retrieved 2025-12-03, License - CC BY-SA 4.0
 #Mat grad_x, grad_y;
-sobelX = cv2.Sobel(imgG, cv2.CV_32F, 1, 0, ksize=5)
-sobelY = cv2.Sobel(imgG, cv2.CV_32F, 0, 1, ksize=5)
-imgG8U = cv2.Mat.convertTo() #convert 32u back to 8u
 
-def energy_map(imgG):
-    # run a sobel filter
-    pass
+def energy_map(img):
+    sobelX = cv2.Sobel(img, cv2.CV_32F, 1, 0, ksize=3)
+    sobelY = cv2.Sobel(img, cv2.CV_32F, 0, 1, ksize=3)
+    energyLevel = cv2.magnitude(sobelX, sobelY) 
+    # bright edges that appear in the map are stronger, higher energies 
+    # that signify whether an object is of importance (& whether to keep them)
+    # this will also show the lower energy levels that we want to eliminate
+    return energyLevel.astype(np.uint8)
 
 display(imgG)
 display(filtered1)
-display(sobelXY) #find or create
+e_m = energy_map(imgG)
+display(e_m)
+
 
 def get_energy(img):
     #run convolution on edge detected image I think

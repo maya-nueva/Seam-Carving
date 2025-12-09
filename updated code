@@ -40,12 +40,12 @@ display(e_m)
 
 #get the best seam its top down
 
-def min_seam(img):
+def min_seam_vert(img):
     imgH, imgW = img.shape #get the image proportions
     imageEnergy = get_energy_map(img)
     energyMap = imageEnergy.copy()
-    seams = np.zeros_like((imgH, imgW), dtype=float) #create an array with zeros (the same dimensions)
-    delete = np.ones((imgH, imgW), dtype=np.bool) 
+    seams = np.zeros_like(img, dtype=np.int32) #create an array with zeros (the same dimensions)
+    toDelete = np.ones((imgH, imgW), dtype=np.bool) 
 
     for h in range(1, imgH):
         for w in range(imgW):
@@ -53,11 +53,11 @@ def min_seam(img):
 
             #check if the pixel we are on is on the edge. if so, only append pixels that actually exist
             if w > 0: 
-                choices.append(energyMap[h-1, w-1], w-1)
+                choices.append([energyMap[h-1, w-1], w-1])
             if w < imgW -1:
-                choices.append(energyMap[h-1, w+1], w-1)
+                choices.append([energyMap[h-1, w+1], w-1])
 
-            choices.append(energyMap[h-1, w], w-1) #append pixel directly above as an option automatically
+            choices.append([energyMap[h-1, w], w-1]) #append pixel directly above as an option automatically
 
             #what I used to understand this syntax: https://discuss.python.org/t/allow-min-and-max-to-return-both-the-key-and-value/62990
             #and https://stackoverflow.com/questions/54907754/how-does-lambda-work-in-python-with-max-function
@@ -69,18 +69,24 @@ def min_seam(img):
     #reference for these lines: https://karthikkaranth.me/blog/implementing-seam-carving-with-python/
     x = np.argmin(energyMap[-1]) #the minimum ending/cumulative energy value at the bottom
    
+   #makes new arrays with the seams marked in boolean
     for h in reversed(range(imgH)):
-        delete[h, x]
+        toDelete[int(h),int(x)] = 0
         x = seams[h, x]
 
 
-    return img 
+    return toDelete
     
+def min_seam_horiz(img):
+    horizImg = cv2.rotate(img, cv2.ROTATE_90_CLOCKWISE) #src: https://www.geeksforgeeks.org/python/python-opencv-cv2-rotate-method/
+    #run min seam
 
+min_seam_vert(e_m)
 
-min_seam(e_m)
-
-def remove_seams():
-   
-
-   pass
+def remove_seams(img):
+    imgRow, imgColumn = img.shape #get the image proportions for deletion
+    min_delete = min_seam(img)
+    # booleans to delete
+    
+def repeat_cropping():
+    pass

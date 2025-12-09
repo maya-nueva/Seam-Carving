@@ -39,25 +39,43 @@ display(e_m)
 
 
 #get the best seam its top down
+
 def min_seam(img):
-   imgH, imgW = img.shape #get the image proportions
-   imageEnergy = get_energy_map(img)
-   energyMap = imageEnergy.copy()
-   seamAssignments = np.zeros_like(energyMap) #create an array with zeros (the same dimensions)
-   minArray = np.zeros_like(energyMap) #create an array with zeros (the same dimensions)
-   seams = []
-   for h in range(imgH - 2):
-      for w in range(imgW-1):
-        choices = []
-        if w > 0: #not on the left edge
-            choices.append([energyMap[h + 1, w -1], w-1])
-        if w < (imgW -1): # not on the right edge
-            choices.append([energyMap[h + 1, w + 1], w + 1])
-        
-        choices.append([energyMap[h + 1, w], w]) #append the pixel directly below it no matter what!
-        chosenPixel_e, chosenPixel_x = np.argmin(choices, axis=0) #the best next pixels
-        
-        minArray[h][w] = 
+    imgH, imgW = img.shape #get the image proportions
+    imageEnergy = get_energy_map(img)
+    energyMap = imageEnergy.copy()
+    seams = np.zeros_like((imgH, imgW), dtype=float) #create an array with zeros (the same dimensions)
+    delete = np.ones((imgH, imgW), dtype=np.bool) 
+
+    for h in range(1, imgH):
+        for w in range(imgW):
+            choices = [] #create array with pixels, find the lowest energy one
+
+            #check if the pixel we are on is on the edge. if so, only append pixels that actually exist
+            if w > 0: 
+                choices.append(energyMap[h-1, w-1], w-1)
+            if w < imgW -1:
+                choices.append(energyMap[h-1, w+1], w-1)
+
+            choices.append(energyMap[h-1, w], w-1) #append pixel directly above as an option automatically
+
+            #what I used to understand this syntax: https://discuss.python.org/t/allow-min-and-max-to-return-both-the-key-and-value/62990
+            #and https://stackoverflow.com/questions/54907754/how-does-lambda-work-in-python-with-max-function
+            lowest_energy, x_position = min(choices, key=lambda x:x[0])
+
+            energyMap[h, w] += lowest_energy
+            seams[h, w] = x_position
+
+    #reference for these lines: https://karthikkaranth.me/blog/implementing-seam-carving-with-python/
+    x = np.argmin(energyMap[-1]) #the minimum ending/cumulative energy value at the bottom
+   
+    for h in reversed(range(imgH)):
+        delete[h, x]
+        x = seams[h, x]
+
+
+    return img 
+    
 
 
 min_seam(e_m)

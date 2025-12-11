@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import cv2
 
-image1_path = "./images/field.jpg" # be aware that this path may not be the same across all computer setups!!!!
+image1_path = "./images/hark! a horse!.jpg" # be aware that this path may not be the same across all computer setups!!!!
 img1 = cv2.imread(image1_path)
 img1 = cv2.cvtColor(img1, cv2.COLOR_BGR2RGB) # we convert our image into color RGB in order to work with it as a grayscale image later
 
@@ -29,7 +29,7 @@ def get_energy_map(img):
     # bright edges that appear in the map are stronger, higher energies 
     # that signify whether an object is of importance (& whether to keep them)
     # this will also show the lower energy levels that we want to eliminate
-    image = energyLevel.astype(np.uint8)
+    image = energyLevel.astype(np.uint8) 
     # Helpful Source: https://stackoverflow.com/questions/58149004/understanding-the-sobel-operation-output-for-creating-an-energy-map 
     return image
 
@@ -37,14 +37,13 @@ display(imgG)
 e_m = get_energy_map(imgG) 
 display(e_m) 
 
+#get the best seam; top down approach
 
-#get the best seam its top down
-
-def min_seam_vert(img):
+def find_min_seam(img):
     imgH, imgW = img.shape #get the image proportions
     imageEnergy = get_energy_map(img)
-    energyMap = imageEnergy.copy()
-    seams = np.zeros_like(img, dtype=np.int32) #create an array with zeros (the same dimensions)
+    energyMap = imageEnergy.astype(np.int32)
+    seams = np.zeros_like(img,dtype = np.int32) #create an array with zeros (the same dimensions)
     toDelete = np.ones((imgH, imgW), dtype=np.bool) 
 
     for h in range(1, imgH):
@@ -55,9 +54,9 @@ def min_seam_vert(img):
             if w > 0: 
                 choices.append([energyMap[h-1, w-1], w-1])
             if w < imgW -1:
-                choices.append([energyMap[h-1, w+1], w-1])
+                choices.append([energyMap[h-1, w+1], w+1])
 
-            choices.append([energyMap[h-1, w], w-1]) #append pixel directly above as an option automatically
+            choices.append([energyMap[h-1, w], w]) #append pixel directly above as an option automatically
 
             #what I used to understand this syntax: https://discuss.python.org/t/allow-min-and-max-to-return-both-the-key-and-value/62990
             #and https://stackoverflow.com/questions/54907754/how-does-lambda-work-in-python-with-max-function
@@ -69,24 +68,87 @@ def min_seam_vert(img):
     #reference for these lines: https://karthikkaranth.me/blog/implementing-seam-carving-with-python/
     x = np.argmin(energyMap[-1]) #the minimum ending/cumulative energy value at the bottom
    
-   #makes new arrays with the seams marked in boolean
+    coloredImg = cv2.cvtColor(img,cv2.COLOR_GRAY2RGB)
+    #makes new arrays with the seams marked in boolean
     for h in reversed(range(imgH)):
-        toDelete[int(h),int(x)] = 0
+        toDelete[h,x] = 0
+        coloredImg[int(h),int(x)] = [0,0,255]
         x = seams[h, x]
 
+    #make seam visible
+    # print(seams)
 
-    return toDelete
+    # print(toDelete)
+    display(coloredImg)
+    return coloredImg
     
-def min_seam_horiz(img):
-    horizImg = cv2.rotate(img, cv2.ROTATE_90_CLOCKWISE) #src: https://www.geeksforgeeks.org/python/python-opencv-cv2-rotate-method/
-    #run min seam
+# def find_min_seam_horiz(img):
+#     horizImg = cv2.rotate(img, cv2.ROTATE_90_CLOCKWISE) #src: https://www.geeksforgeeks.org/python/python-opencv-cv2-rotate-method/
+#     vertSeam = find_min_seam_vert(horizImg)
+#     newVertImg = remove_seams(vertSeam)
+#     horizSeamImg = cv2.rotate(newVertImg, cv2.ROTATE_90_CLOCKWISE)
+    
+#     return horizSeamImg
 
-min_seam_vert(e_m)
+find_min_seam(e_m)
 
-def remove_seams(img):
-    imgRow, imgColumn = img.shape #get the image proportions for deletion
-    min_delete = min_seam(img)
+#input image, if it is horizontal or vertical (h or v) 
+# and then remove all pixels that are == 0 in the returned array from find min seam
+#remember to maybe check that the removed seam matches the seam it's found
+
+#wes said you were dead weight rachel, we dont agree with him but beware evil teachers
+def remove_seams(img, vert, newVert):
+    find_min_seam(img)
+    if find_min_seam == False:
+        
+        pass
+    else: 
+        newVert = cv2.rotate(vert, cv2.ROTATE_90_CLOCKWISE)
+        pass
+    
     # booleans to delete
-    
-def repeat_cropping():
+
+def add_seams(img):
     pass
+    seamArray = find_min_seam(img)
+    seam = np.stack( [seamArray] * 3 , axis = 2 ) #"stack" the array to target all color channels
+    img = img[seamArray].re
+
+    
+    
+    
+    
+def change(img, scaleW, scaleH): #user/coder will input their image and how much they want to scale the height and width by (e.g. i want it to be twice as wide but half as tall)
+    ogImg = img.copy
+    
+    h, w = img.shape
+
+    goalW = w*scaleW
+    goalH = h*scaleH
+
+    if scaleW < 1: #if you want to make the width smaller aka the image thinner
+        for i in range(w-goalW): #remove correct amount of seams 
+            img = remove_seams(img, "vertical") #find and remove lowest energy seam
+    elif scaleW > 1: #if you want to make it wider
+        for i in range(goalW-w):
+            img = add_seams(img, "vertical") #find and add seams for as many new pixels as you need (question for wes about same seam?)
+    #if the scaleW is = 1, nothing will happen because it does not need to be resized
+    
+    if scaleH < 1: #if you want to make it shorter
+        for i in range(h-goalH):
+            img = remove_seams(img, "horizantal") #find and remove seams
+    elif scaleH > 1: #if you want to make it taller
+        for i in range(goalH-h):
+            img = add_seams(img, "horizantal") #find and add seams
+    #if the scaleH is = 1, nothing will happen because it does not need to be resized
+    
+    images = [ogImg, img]
+    return images
+    
+
+#end result, compare and contrast?
+#include greyscale in change?
+
+#1: test finding seams
+#2: add seams
+#3: UI

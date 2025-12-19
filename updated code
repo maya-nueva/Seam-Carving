@@ -78,6 +78,10 @@ def find_min_seam(img, energyMap):
    return toDelete
 
 
+
+
+
+
 def removeVertSeams(img, deleteMap): # this is removing seams from the image:
     H, W = img.shape[:2] #get the height and width of the image
     newImg = np.zeros((H,W-1,3), dtype= img.dtype) #creates new array the shape of the img but with one less column (bc were shrinking it), still of depth 3
@@ -93,36 +97,12 @@ def removeVertSeams(img, deleteMap): # this is removing seams from the image:
         # source https://stackoverflow.com/questions/64180609/delete-both-row-and-column-in-numpy-array
         # np documentation: https://numpy.org/devdocs/reference/generated/numpy.delete.html
 
-        # newImg = np.zeros((3, H, W-1), dtype= img.dtype) #creates new array the shape of the img but with one less column (bc were shrinking it), still of depth 3
-      # newImgR = np.zeros((H,W-1), dtype= img.dtype)
-      # newImgG = np.zeros((H,W-1), dtype= img.dtype)
-      # newImgB = np.zeros((H,W-1), dtype= img.dtype)
-
-      # print(newImgR.shape)
-      # # print(img.shape)
-      # for row in range(H):
-      #   # print(newImg[i, row, :].shape)
-      #   newImgR[row] = img[row, :, 0][deleteMap[row]]
-      #   newImgG[row] = img[row,:, 1][deleteMap[row]]
-      #   newImgB[row] = img[row, :, 2][deleteMap[row]]
-      #   newImg = np.dstack((newImgR, newImgG, newImgB))
-      # return newImg
-
-
-
-
 
 def remove_seams (img, setting): #removed the = "vertical", does that matter?
-  # if setting == "vertical":
-  #   deleteMap = find_min_seam(greyImage, energyMap) #added in for speed
-  #   greyImage = convert_to_grayscale(img)
-  #   energyMap = get_energy_map(img) #added in for speed
-  
   if setting == "horizontal":
     img = cv2.rotate(img, cv2.ROTATE_90_CLOCKWISE)
 
   greyImage = convert_to_grayscale(img)
-  # display(greyImage)
   energyMap = get_energy_map(greyImage)
   deleteMap = find_min_seam(greyImage, energyMap)
 
@@ -134,26 +114,47 @@ def remove_seams (img, setting): #removed the = "vertical", does that matter?
 
 
 
-# def addVertSeams(img, lowestSeam):
-#   # add stuff here
-#   # !!!
-#   # !!!
-#   # !!!
-#   # make a new image with the same dimensions as the og img but +1 in width
-#   H, W = img.shape[:2] #get the height and width of the image
-#   newImg = np.zeros((H,W+1,3), dtype= img.dtype) #creates new array the shape of the img but with one less column (bc were shrinking it), still of depth 3
-  
-#   pass
 
-# def add_seams(img, setting = "vertical"):
-#   if setting == "vertical":
-#       img = addVertSeams(img)
-#   else:
-#     # rotate img, get vert seam out, rotate back
-#     rotatingimg = cv2.rotate(img, cv2.ROTATE_90_CLOCKWISE)
-#     rotatedimgNew = addVertSeams(rotatingimg)
-#     img = cv2.rotate(rotatedimgNew, cv2.ROTATE_90_COUNTERCLOCKWISE)
-#   return img
+
+def addVertSeam(img, deleteMap):
+  # make a new image with the same dimensions as the og img but +1 in width
+  H, W = img.shape[:2] #get the height and width of the image
+  imgCopy = img.copy()
+  newImg = np.zeros((H,W+1,3), dtype= img.dtype) #creates new array the shape of the img but with one less column (bc were shrinking it), still of depth 3
+  #loop through each layer in the image, and then through each row in that layer, and add a pixel to the right with the proper value based on the location of the False in the deleteMap
+  for channel in range(3):
+    for row in range(H):
+      #to insert value in array at a certain index, np.insert(arrayName, index after, value)
+      idx = np.where(deleteMap[row]==False)[0]
+      newImg[row,:,channel] = np.insert(imgCopy[row,:,channel], idx+1, imgCopy[row,idx,channel]) 
+  return newImg
+
+
+def add_seams(img, setting):
+  if setting == "horizontal": #if they want to add to the height aka add horizontally
+    img = cv2.rotate(img, cv2.ROTATE_90_CLOCKWISE) #rotate the image first
+
+  #the whole process for getting the deleteMap (do we want to make this into a mini function since it repeats a couple of times?)
+
+  greyImage = convert_to_grayscale(img)
+  energyMap = get_energy_map(greyImage)
+  deleteMap = find_min_seam(greyImage, energyMap)
+
+  #add the vertical seam
+  img = addVertSeam(img, deleteMap)
+
+  if setting == "horizontal": #if we did this on a rotated image to increase height, rotate back to og orientation
+    img = cv2.rotate(img, cv2.ROTATE_90_COUNTERCLOCKWISE)
+  
+  return img #return beautiful resized image
+
+#sources:
+#for the numpy array where() function: https://datascienceparichay.com/article/find-index-of-element-in-numpy-array/#:~:text=How%20to%20find%20the%20index%20of%20element%20in%20numpy%20array,following%20example%20illustrates%20the%20usage.&text=Here%2C%20arr%20is%20the%20numpy,boolean%20True%20and%20False%20values.
+#np documentation insert() function: https://numpy.org/doc/2.1/reference/generated/numpy.insert.html
+#helped me debug: https://stackoverflow.com/questions/68143184/having-trouble-inserting-a-value-into-a-numpy-array#:~:text=Sorted%20by:,3%2C7076%2048%2070
+
+
+
 
 
 def change_scale(img, scaleW, scaleH): #user/coder will input their image and how much they want to scale the height and width by (e.g. i want it to be twice as wide but half as tall)  
@@ -181,12 +182,11 @@ def change_scale(img, scaleW, scaleH): #user/coder will input their image and ho
       img = remove_seams(img, "horizontal") #find and remove seams
       print("height worked")
   elif scaleH > 1: # make it taller
-    print("adding seams not yet implemented!!")
-#        for i in range(goalH-h):
-#            img = add_seams(img, "horizontal") #find and add seams
+    for i in range(goalH-h): #total num of pixels you need to add, larger (ideal) size - current smaller size
+        img = add_seams(img, "horizontal") #find and add seam, this is repeated for as many new pixels as you need
    #if the scaleH is = 1, nothing will happen because it does not need to be resized
-  # newImg = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
-  return img
+
+  return img #this is the FINAL image. very beautiful.
 
 
    
@@ -196,7 +196,7 @@ display(img1) #the original image
 imgG = convert_to_grayscale(img1)
 e_m = get_energy_map(imgG) 
 display(e_m) #the energy map image, aka the sobel filtered img
-resized = change_scale(img1, 1, 0.8) #the number 0.9 is a percent of how much you want ur img to be kept (ie 0.9 means that only 10% of seams are actually eliminated)
+resized = change_scale(img1, 0.8, 1.2) #the number 0.9 is a percent of how much you want ur img to be kept (ie 0.9 means that only 10% of seams are actually eliminated)
 display(resized) #the cropped or elongated image
 
 
